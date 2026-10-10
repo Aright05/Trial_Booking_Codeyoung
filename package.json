@@ -1,0 +1,28 @@
+{
+  "name": "codeyoung-trial-booking-root",
+  "version": "1.0.0",
+  "description": "Codeyoung Trial Class Booking System - Full-Stack Recruitment MVP",
+  "private": true,
+  "scripts": {
+    "install:all": "npm --prefix client install && npm --prefix server install",
+    "client": "npm --prefix client run dev",
+    "server": "npm --prefix server run dev",
+    "seed": "npm --prefix server run seed",
+    "build": "npm --prefix client run build",
+    "build:client": "npm --prefix client run build",
+    "test": "npm --prefix server test && npm --prefix client test",
+    "test:server": "npm --prefix server test",
+    "test:client": "npm --prefix client test"
+  },
+  "keywords": [
+    "codeyoung",
+    "trial-booking",
+    "react",
+    "vite",
+    "express",
+    "luxon",
+    "mongoose"
+  ],
+  "author": "",
+  "license": "ISC"
+}

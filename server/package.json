@@ -1,0 +1,29 @@
+{
+  "name": "codeyoung-trial-booking-server",
+  "version": "1.0.0",
+  "description": "Backend API for Codeyoung Trial Class Booking System",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "seed": "node src/scripts/seedPostgresMentors.js",
+    "seed:pg": "node src/scripts/seedPostgresMentors.js",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "luxon": "^3.5.0",
+    "mongoose": "^9.11.1",
+    "nodemailer": "^10.1.0",
+    "pg": "^8.13.3",
+    "pg-mem": "^3.0.14"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9",
+    "supertest": "^7.0.0",
+    "vitest": "^2.1.8"
+  }
+}
