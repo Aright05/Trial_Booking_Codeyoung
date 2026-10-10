@@ -49,9 +49,33 @@ export const initPostgresSchema = async () => {
     );
   `;
 
+  // 4. Subscriptions table (Paid subscription plans records)
+  const createSubscriptionsTableQuery = `
+    CREATE TABLE IF NOT EXISTS subscriptions (
+      id VARCHAR(100) PRIMARY KEY,
+      parent_name VARCHAR(100) NOT NULL,
+      parent_email VARCHAR(255) NOT NULL,
+      normalized_parent_email VARCHAR(255) NOT NULL,
+      plan_id VARCHAR(50) NOT NULL,
+      plan_name VARCHAR(100) NOT NULL,
+      price_paise INTEGER NOT NULL,
+      currency VARCHAR(10) NOT NULL DEFAULT 'INR',
+      status VARCHAR(50) NOT NULL DEFAULT 'pending_payment',
+      payment_status VARCHAR(50) NOT NULL DEFAULT 'unpaid',
+      payment_provider_ref VARCHAR(255),
+      duration_days INTEGER NOT NULL,
+      starts_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      expires_at TIMESTAMP WITH TIME ZONE,
+      metadata JSONB DEFAULT '{}',
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+  `;
+
   await query(createMentorsTableQuery).catch(() => {});
   await query(createBookingsTableQuery).catch(() => {});
   await query(createTrialEntitlementsTableQuery).catch(() => {});
+  await query(createSubscriptionsTableQuery).catch(() => {});
 
   // Safe additive migrations for existing tables
   await query('ALTER TABLE bookings ADD COLUMN IF NOT EXISTS booking_reference VARCHAR(50);').catch(() => {});
@@ -69,6 +93,9 @@ export const initPostgresSchema = async () => {
   await query('CREATE INDEX IF NOT EXISTS idx_bookings_start_end_status ON bookings(start_at, end_at, status);').catch(() => {});
   await query('CREATE INDEX IF NOT EXISTS idx_bookings_reference ON bookings(booking_reference);').catch(() => {});
   await query('CREATE INDEX IF NOT EXISTS idx_trial_entitlements_normalized ON free_trial_entitlements(normalized_email);').catch(() => {});
+  await query('CREATE INDEX IF NOT EXISTS idx_subscriptions_email ON subscriptions(parent_email);').catch(() => {});
+  await query('CREATE INDEX IF NOT EXISTS idx_subscriptions_normalized_email ON subscriptions(normalized_parent_email);').catch(() => {});
+  await query('CREATE INDEX IF NOT EXISTS idx_subscriptions_status ON subscriptions(status);').catch(() => {});
 
   // Try creating btree_gist extension and PostgreSQL exclusion constraint for zero-overlap guarantee
   try {

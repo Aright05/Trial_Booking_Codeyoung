@@ -145,4 +145,24 @@ export async function fetchMentorSchedule(mentorEmail, { from, to } = {}) {
   });
 }
 
+/**
+ * Fetch subscription plans from backend
+ * GET /api/subscriptions/plans
+ */
+export async function fetchSubscriptionPlans() {
+  return apiRequest('/subscriptions/plans');
+}
+
+/**
+ * Create subscription intent (demo mode)
+ * POST /api/subscriptions/intent
+ */
+export async function createSubscriptionIntent(subscriptionData) {
+  return apiRequest('/subscriptions/intent', {
+    method: 'POST',
+    body: JSON.stringify(subscriptionData),
+  });
+}
+
+
 

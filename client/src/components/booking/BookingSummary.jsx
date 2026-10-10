@@ -13,9 +13,11 @@ export const BookingSummary = ({
   selectedSlot,
   isTrialClaimed = false,
   onOpenSubscriptionModal,
+  onOpenSubscription,
   onSubmitBooking,
   isSubmitting = false,
 }) => {
+  const handleOpenSubscription = onOpenSubscriptionModal || onOpenSubscription;
   const isComplete = Boolean(parentName?.trim() && parentEmail?.trim() && selectedDate && selectedSlot);
 
   return (
@@ -122,9 +124,10 @@ export const BookingSummary = ({
           {isTrialClaimed ? (
             <div className="space-y-2">
               <button
+                id="explore-paid-plans-btn"
                 type="button"
-                onClick={onOpenSubscriptionModal}
-                className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2"
+                onClick={handleOpenSubscription}
+                className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-indigo-700 hover:from-purple-700 hover:to-indigo-800 text-white font-extrabold text-xs shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-purple-400"
               >
                 <Sparkles className="w-4 h-4 text-amber-300" />
                 <span>Explore Paid Subscription Plans</span>

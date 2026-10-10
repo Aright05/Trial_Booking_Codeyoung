@@ -2,7 +2,7 @@
 
 A production-minded, full-stack trial-class booking platform built for the **Codeyoung Trial Class Booking System**.
 
-The system enables parents worldwide (across US, UK, India, and beyond) to book 1:1 live trial sessions with certified mentors with smart timezone synchronization, single free-trial per Gmail account enforcement, fair mentor load balancing (maximum 2 trial classes per mentor per India calendar day), strict zero-overlap concurrency protection, post-commit email notifications (Nodemailer), persistent 1:1 demo class link delivery, a dedicated Mentor Schedule portal, and a real-time administrative operations dashboard.
+The system enables parents worldwide (across US, UK, India, and beyond) to book 1:1 live trial sessions with certified mentors with smart timezone synchronization, single free-trial per Gmail account enforcement, fair mentor load balancing (maximum 2 trial classes per mentor per India calendar day), strict zero-overlap concurrency protection, post-commit email notifications (Nodemailer), persistent 1:1 demo class link delivery, a dedicated Mentor Schedule portal, configurable Paid Subscription Plans with demo checkout, and a real-time administrative operations dashboard.
 
 ---
 
@@ -14,7 +14,7 @@ The system enables parents worldwide (across US, UK, India, and beyond) to book 
 - **Backend:** Node.js + Express
 - **Database:** PostgreSQL with connection pooling (`pg` node-postgres driver)
 - **Email Notifications:** Nodemailer with development test transport & Ethereal sandbox support
-- **Testing:** Vitest + Supertest (77 automated unit & integration tests across 9 test suites)
+- **Testing:** Vitest + Supertest (87 automated unit & integration tests across 11 test suites)
 
 ---
 
@@ -29,11 +29,12 @@ codeyoung-trial-booking/
 │   │   │   ├── common/         # Button, Input, Card, Badge, Loading, ErrorState
 │   │   │   ├── layout/         # Header (with live navigation and API monitor), Footer
 │   │   │   └── booking/        # TimezoneSelector, SlotPicker, BookingForm, BookingSummary, BookingSuccessModal, SubscriptionPlanModal, StepNotice
+│   │   ├── config/             # subscriptionPlans.js (Client Pricing Configuration)
 │   │   ├── hooks/              # useBookingState (live slots, trial eligibility & booking workflow)
 │   │   ├── pages/              # BookingPage, AdminPage, MentorPage
-│   │   ├── services/           # api.js client fetch wrapper with Admin, Trial, and Mentor APIs
+│   │   ├── services/           # api.js client fetch wrapper with Admin, Trial, Subscription, and Mentor APIs
 │   │   ├── utils/              # timezones.js (Luxon multi-zone conversions)
-│   │   ├── __tests__/          # Vitest frontend tests (timezones & client features)
+│   │   ├── __tests__/          # Vitest frontend tests (timezones, client features, subscription plans)
 │   │   ├── App.jsx             # Tri-view routing (Parent Booking, Mentor Schedule & Admin Operations)
 │   │   ├── index.css           # Tailwind layers & colorful gradient pattern
 │   │   └── main.jsx
@@ -43,14 +44,14 @@ codeyoung-trial-booking/
 │   └── .env.example
 ├── server/                     # Node.js + Express Backend
 │   ├── src/
-│   │   ├── config/             # constants.js, env.js, postgres.js, initPostgresSchema.js
-│   │   ├── controllers/        # health.controller.js, mentor.controller.js, slot.controller.js, booking.controller.js, trial.controller.js, mentorSchedule.controller.js, admin.controller.js
+│   │   ├── config/             # constants.js, env.js, postgres.js, initPostgresSchema.js, subscriptionPlans.js
+│   │   ├── controllers/        # health.controller.js, mentor.controller.js, slot.controller.js, booking.controller.js, trial.controller.js, mentorSchedule.controller.js, subscription.controller.js, admin.controller.js
 │   │   ├── middleware/         # adminAuth.js, mentorAuth.js, errorHandler.js, notFoundHandler.js
-│   │   ├── routes/             # health.routes.js, mentor.routes.js, slot.routes.js, booking.routes.js, trial.routes.js, admin.routes.js, index.js
+│   │   ├── routes/             # health.routes.js, mentor.routes.js, slot.routes.js, booking.routes.js, trial.routes.js, subscription.routes.js, admin.routes.js, index.js
 │   │   ├── scripts/            # seedMentors.js, seedPostgresMentors.js (idempotent 10-mentor seed)
-│   │   ├── services/           # availability.service.js, booking.service.js, trial.service.js, mentorSchedule.service.js, email.service.js, admin.service.js
+│   │   ├── services/           # availability.service.js, booking.service.js, trial.service.js, mentorSchedule.service.js, subscription.service.js, email.service.js, admin.service.js
 │   │   ├── utils/              # apiResponse.js, timezone.js, emailNormalizer.js
-│   │   ├── __tests__/          # Vitest + Supertest test suites (health, models, booking, timezone, email, admin, trial_and_mentor)
+│   │   ├── __tests__/          # Vitest + Supertest test suites (health, models, booking, timezone, email, admin, trial_and_mentor, subscription)
 │   │   ├── app.js              # Express app instance & CORS
 │   │   └── server.js           # Server listen on port 5001 & graceful shutdown
 │   ├── package.json
@@ -94,23 +95,46 @@ codeyoung-trial-booking/
   - Backed by transaction isolation and transactional validation to ensure no race condition can ever double-book a mentor.
   - Adjacent non-overlapping meetings (e.g., 10:00–10:50 and 10:50–11:40) are safely allowed if daily capacity allows.
 
-### 3. Demo Meeting Link & Booking Confirmation
+### 3. Paid Subscription Plans & Demo Checkout Integration
+When a parent's Gmail has already claimed its 1 free trial, the system provides a prominent, clickable **"Explore Paid Subscription Plans"** button in both the Booking Summary and Booking Form.
+
+#### Configured Plans:
+- **Plan A: 3-Day Pass**
+  - Duration: 3 days (`/ 3 days`)
+  - Price: ₹199 (`19900` paise)
+  - Features: Trial/demo learning sessions, mentor schedule viewing, booking confirmations, email notifications.
+- **Plan B: Monthly Plan**
+  - Duration: 30 days (`/ month`)
+  - Price: ₹999 (`99900` paise)
+  - Features: Eligible learning sessions, mentor schedule viewing, booking management & meeting details, email notifications & confirmations, priority booking.
+- **Plan C: Yearly Plan (Best Value)**
+  - Duration: 365 days (`/ year`)
+  - Price: ₹7,999 (`799900` paise)
+  - Features: Full-year curriculum access, mentor schedule viewing, booking management, email confirmations, priority booking.
+
+#### Configuration Locations:
+- Server (Source of Truth): [server/src/config/subscriptionPlans.js](file:///d:/study/SIH/Book_Trial_Codeyoung/server/src/config/subscriptionPlans.js)
+- Frontend (Client UI): [client/src/config/subscriptionPlans.js](file:///d:/study/SIH/Book_Trial_Codeyoung/client/src/config/subscriptionPlans.js)
+
+#### Plan Selection & Checkout Behavior:
+- Clicking **"Choose Plan"** transitions to a plan-confirmation/checkout view showing the selected plan, price, features, and parent information.
+- Clicking **"Continue to Payment"** triggers `POST /api/subscriptions/intent`, creating a record in PostgreSQL with `status = 'pending_payment'` and `payment_status = 'demo_pending'`.
+- **Security & Validation:** The backend strictly validates `plan_id` and calculates prices using server configuration. Frontend-supplied prices are never trusted.
+- **Payment Disclaimer:** Clearly labeled demo checkout placeholder. Subscriptions are created in pending demo state; no real credit card or payment credentials are collected.
+
+### 4. Demo Meeting Link & Booking Confirmation
 - **Demo Meeting URL:** Clearly labelled as a demonstration meeting link (`https://meet.codeyoung.com/room/CY-XXXXXX`). No false claims of third-party Google Meet API creation are made.
 - **Confirmation Details:** Displays Booking Reference, Mentor's Full Name, Professional Contact Email, Avatar / Initials, Mentor Timezone, Parent Local Date & Time, Mentor Local Date & Time, 50-minute Class Duration, Copy Link action, and "Join Meeting" launcher.
 
-### 4. Mentor Schedule Portal & Private Access
+### 5. Mentor Schedule Portal & Private Access
 - **Private Route:** `/api/mentor/me/schedule?from=YYYY-MM-DD&to=YYYY-MM-DD`.
 - **Authentication:** Authenticates the mentor identity via `x-mentor-email` header or `Authorization: Bearer <mentor-email>`. Mentors can only query and view their own assigned sessions.
 - **Frontend Portal (`#mentor`):** Interactive mentor schedule section grouping appointments into **Today**, **Tomorrow**, **Upcoming**, and a custom **Date Picker**, showing real-time capacity usage (e.g. `1 / 2 classes booked today`), parent contact details, meeting status badges, and copy link action.
 
-### 5. Dual-Timezone Email Notifications & Reliability
+### 6. Dual-Timezone Email Notifications & Reliability
 - **Parent Notification:** Dispatched with localized parent appointment time, mentor's local time, mentor's professional contact email, trial single-use policy notice, and classroom demo link.
 - **Mentor Notification:** Dispatched with mentor's local time (`Asia/Kolkata`), parent's local time, parent contact details, classroom demo link, and mentor schedule portal link.
 - **Reliability:** Notifications are triggered asynchronously post-commit. Email transport failures are logged to `parent_notified = 'failed'` without rolling back committed database bookings.
-
-### 6. Paid Subscription & Callback Alternatives
-- If a parent's Gmail has already claimed a free trial, the frontend immediately disables the trial form and displays a clear message with a button to explore **Paid Subscription Plans** (e.g., STEM Explorer & Python Pro).
-- Parents can submit a callback enquiry. A clear disclosure explains that this is a demo environment and no credit card or payment data is collected.
 
 ---
 
@@ -183,8 +207,7 @@ npm run dev
 ### Public & Parent Endpoints
 
 #### 1. Check Free Trial Eligibility: `GET /api/trials/eligibility`
-**Query Parameters:**
-- `email`: e.g. `parent.name+test@gmail.com`
+**Query Parameters:** `email=parent.name+test@gmail.com`
 **Response (200 OK):**
 ```json
 {
@@ -198,12 +221,44 @@ npm run dev
 }
 ```
 
-#### 2. Availability API: `GET /api/slots`
+#### 2. Get Subscription Plans: `GET /api/subscriptions/plans`
+**Response (200 OK):**
+Returns the 3 configured plans (3-Day Pass, Monthly Plan, Yearly Plan) with durations, features, formatted prices, and prices in paise.
+
+#### 3. Create Subscription Intent (Demo Checkout): `POST /api/subscriptions/intent`
+**Request Body:**
+```json
+{
+  "parentName": "Sarah Jenkins",
+  "parentEmail": "sarah.jenkins@gmail.com",
+  "planId": "monthly",
+  "phone": "+91 98765 43210",
+  "notes": "Grade 5 student interested in Python"
+}
+```
+**Response (201 Created):**
+```json
+{
+  "success": true,
+  "data": {
+    "subscriptionId": "SUB-20261010-3FA1B2",
+    "planId": "monthly",
+    "planName": "Monthly Plan",
+    "priceFormatted": "₹999",
+    "pricePaise": 99900,
+    "status": "pending_payment",
+    "paymentStatus": "demo_pending",
+    "isDemoMode": true
+  }
+}
+```
+
+#### 4. Availability API: `GET /api/slots`
 **Query Parameters:**
 - `date`: `YYYY-MM-DD` (e.g. `2026-11-20`)
 - `timezone`: IANA timezone identifier (`Asia/Kolkata`, `Europe/London`, `America/New_York`, `America/Los_Angeles`)
 
-#### 3. Booking Creation API: `POST /api/bookings`
+#### 5. Booking Creation API: `POST /api/bookings`
 **Request Body:**
 ```json
 {
@@ -215,7 +270,7 @@ npm run dev
 ```
 **Response (201 Created):** Returns full booking record, normalized email, mentor contact email, avatar, local parent/mentor times, and demo classroom URL.
 
-#### 4. Booking Retrieval API: `GET /api/bookings/:id`
+#### 6. Booking Retrieval API: `GET /api/bookings/:id`
 ```bash
 curl "http://localhost:5001/api/bookings/CY-20261120-E4A281"
 ```
@@ -227,31 +282,6 @@ curl "http://localhost:5001/api/bookings/CY-20261120-E4A281"
 #### 1. Mentor Private Schedule: `GET /api/mentor/me/schedule`
 **Headers:** `x-mentor-email: mentor.rahul@codeyoung.test`
 **Query Parameters:** `from=YYYY-MM-DD`, `to=YYYY-MM-DD`
-**Response (200 OK):**
-```json
-{
-  "success": true,
-  "data": {
-    "mentor": {
-      "id": 1,
-      "name": "Rahul Sharma",
-      "email": "mentor.rahul@codeyoung.test",
-      "timezone": "Asia/Kolkata"
-    },
-    "bookings": [
-      {
-        "id": "CY-20261120-E4A281",
-        "parentName": "Sarah Jenkins",
-        "parentEmail": "sarah.jenkins+trial@gmail.com",
-        "startAt": "2026-11-20T14:00:00.000Z",
-        "endAt": "2026-11-20T14:50:00.000Z",
-        "status": "confirmed",
-        "meetingUrl": "https://meet.codeyoung.com/room/CY-20261120-E4A281"
-      }
-    ]
-  }
-}
-```
 
 ---
 
@@ -265,7 +295,7 @@ curl "http://localhost:5001/api/bookings/CY-20261120-E4A281"
 
 ---
 
-## 🧪 Automated Testing (77 Tests across 9 Suites)
+## 🧪 Automated Testing (87 Tests across 11 Suites)
 
 Run all tests across backend and frontend from root:
 ```bash
@@ -274,37 +304,43 @@ npm test
 
 Or individually:
 ```bash
-# Backend test suites (71 tests across 7 suites)
+# Backend test suites (76 tests across 8 suites)
 npm run test:server
 
-# Frontend test suites (6 tests across 2 suites)
+# Frontend test suites (11 tests across 3 suites)
 npm run test:client
 ```
 
 ### Test Coverage Highlights:
-1. **Trial Eligibility & Concurrency (`trial_and_mentor.test.js` - 13 tests):**
-   - Single free trial per Gmail account; duplicate normalized variations (`.`, `+tag`, `googlemail.com`) rejected with 409 `FREE_TRIAL_ALREADY_USED`.
-   - Non-Gmail accounts preserve plus-tags and dots.
-   - Atomic concurrency protection preventing race conditions.
-   - Non-overlapping meetings for the same mentor allowed within daily capacity limit (2 classes/IST day).
-   - Zero-overlap guarantee: concurrent overlapping attempts for the same mentor safely rejected with 409 `NO_MENTOR_AVAILABLE`.
-   - Mentor schedule endpoint isolation and authorization verification.
-2. **Booking & Capacity Engine (`booking.test.js` - 12 tests):**
-   - Active mentor filtering, dynamic slot calculations, DST handling, and immediate capacity release on cancellation.
-3. **Timezone & DST Suite (`timezone.test.js` - 15 tests):**
-   - US, UK, and India timezone conversions, ambiguous fall-back times, and nonexistent spring-forward times.
-4. **Admin Dashboard Suite (`admin.test.js` - 10 tests):**
-   - Real PostgreSQL statistics, key authorization, pagination, and double-cancellation prevention.
-5. **Email Service Suite (`email.test.js` - 9 tests):**
-   - Dual-timezone rendering, non-blocking post-commit dispatch, idempotency, and test transport safety.
-6. **Frontend Tests (`client/src/__tests__/` - 6 tests):**
-   - Timezone calculations, display formatting, and client API service checks.
+1. **Subscription Plans & Pricing Suite (`subscription.test.js` - 5 tests):**
+   - ✅ Returns all 3 configured plans (3-Day Pass ₹199, Monthly Plan ₹999, Yearly Plan ₹7,999) with duration & features.
+   - ✅ Rejects invalid plan ID, invalid parent name, and invalid email.
+   - ✅ Creates demo subscription intent in PostgreSQL with server-calculated price in paise and `pending_payment` / `demo_pending` state.
+2. **Trial Eligibility & Concurrency (`trial_and_mentor.test.js` - 13 tests):**
+   - ✅ Single free trial per Gmail account; duplicate normalized variations (`.`, `+tag`, `googlemail.com`) rejected with 409 `FREE_TRIAL_ALREADY_USED`.
+   - ✅ Non-Gmail accounts preserve plus-tags and dots.
+   - ✅ Atomic concurrency protection preventing race conditions.
+   - ✅ Non-overlapping meetings for the same mentor allowed within daily capacity limit (2 classes/IST day).
+   - ✅ Zero-overlap guarantee: concurrent overlapping attempts for the same mentor safely rejected with 409 `NO_MENTOR_AVAILABLE`.
+   - ✅ Mentor schedule endpoint isolation and authorization verification.
+3. **Booking & Capacity Engine (`booking.test.js` - 12 tests):**
+   - ✅ Active mentor filtering, dynamic slot calculations, DST handling, and immediate capacity release on cancellation.
+4. **Timezone & DST Suite (`timezone.test.js` - 15 tests):**
+   - ✅ US, UK, and India timezone conversions, ambiguous fall-back times, and nonexistent spring-forward times.
+5. **Admin Dashboard Suite (`admin.test.js` - 10 tests):**
+   - ✅ Real PostgreSQL statistics, key authorization, pagination, and double-cancellation prevention.
+6. **Email Service Suite (`email.test.js` - 9 tests):**
+   - ✅ Dual-timezone rendering, non-blocking post-commit dispatch, idempotency, and test transport safety.
+7. **Client Frontend Suites (`client/src/__tests__/` - 11 tests):**
+   - ✅ Subscription plan definitions, pricing values, Best Value badge, and API wrappers.
+   - ✅ Timezone calculations, display formatting, and client API service checks.
 
 ---
 
 ## 🔒 Security & Concurrency Guarantees
 
 - **Parameterized Queries:** Every SQL query uses parameterized placeholders (`$1`, `$2`, etc.) eliminating SQL injection risks.
+- **Server-Side Pricing Validation:** Subscription prices are derived exclusively from trusted backend configuration; frontend cannot alter or spoof prices.
 - **Database-Level Enforceability:** Unique constraint on `free_trial_entitlements (normalized_email)` and `btree_gist` range exclusion on `bookings (mentor_id, tstzrange(start_at, end_at, '[)'))`.
 - **Credential Protection:** Secrets (`DATABASE_URL`, `ADMIN_API_KEY`, `EMAIL_PASS`) stay strictly inside environment variables and are excluded from git.
 - **Sanitized Outputs:** Error handling avoids leaking database internals or passwords to the frontend.
@@ -313,7 +349,7 @@ npm run test:client
 
 ## ⚠️ Known Limitations & Recruitment MVP Disclosures
 
+- **Payment Integration:** Subscription plans provide plan details, configurable pricing (₹199, ₹999, ₹7,999), and demo checkout intent records in PostgreSQL. No live credit card processing or payment gateway credentials are collected. Subscriptions remain in `pending_payment` / `demo_pending` state.
 - **Email Delivery in Dev:** Development uses Nodemailer test transporter or Ethereal sandbox (`EMAIL_HOST=smtp.ethereal.email`). For live email delivery, configure real SMTP credentials in `server/.env`.
 - **Demo Meeting Rooms:** Video conference URLs point to configured demo classroom rooms (`meet.codeyoung.com`). No third-party Google Meet OAuth2 integration is claimed.
-- **Subscription Enquiry:** Paid subscription plans provide plan details and a callback demo enquiry form; no real payment gateway or credit card collection is implemented.
 - **Mentor Authentication:** Mentor portal uses header-based verification (`x-mentor-email` / `Bearer`) appropriate for testing and evaluation.

@@ -5,6 +5,7 @@ import slotRoutes from './slot.routes.js';
 import bookingRoutes from './booking.routes.js';
 import adminRoutes from './admin.routes.js';
 import trialRoutes from './trial.routes.js';
+import subscriptionRoutes from './subscription.routes.js';
 
 const router = Router();
 
@@ -15,6 +16,7 @@ router.use('/', slotRoutes);
 router.use('/', bookingRoutes);
 router.use('/', adminRoutes);
 router.use('/', trialRoutes);
+router.use('/', subscriptionRoutes);
 
 export default router;
 

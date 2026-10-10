@@ -25,9 +25,11 @@ export const BookingForm = ({
   isTrialClaimed = false,
   eligibilityMessage = null,
   onOpenSubscriptionModal,
+  onOpenSubscription,
   conflictError,
   errors = {},
 }) => {
+  const handleOpenSubscription = onOpenSubscriptionModal || onOpenSubscription;
   const minDate = DateTime.now().setZone(selectedTimezone).toISODate();
   const maxDate = DateTime.now().setZone(selectedTimezone).plus({ days: 30 }).toISODate();
 
@@ -124,13 +126,13 @@ export const BookingForm = ({
                       </p>
                     </div>
                   </div>
-                  {onOpenSubscriptionModal && (
+                  {handleOpenSubscription && (
                     <button
                       type="button"
-                      onClick={onOpenSubscriptionModal}
-                      className="w-full text-center px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-bold text-[11px] shadow-xs transition-all"
+                      onClick={handleOpenSubscription}
+                      className="w-full text-center px-3 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl font-bold text-xs shadow-xs transition-all cursor-pointer"
                     >
-                      View Monthly Subscription Plans &amp; Enquire
+                      Explore Paid Subscription Plans
                     </button>
                   )}
                 </div>
